@@ -1,27 +1,100 @@
 import streamlit as st
 import pymongo as py
 import datetime
+import json
+import uuid
+
 
 st.set_page_config(page_title="RedGDPS", page_icon=":hospital:", layout="centered")
 
 myclient=py.MongoClient("mongodb://localhost:27017")
-#Relating data to "clinical_data_ssp"
+#Relating data to "clinical_data"
 medical_data_coll=myclient["Clinical_database"]["Medical data"]
 medical_hist_coll=myclient["Clinical_database"]["Medical history"]
 
+#relating data to "demographic_database"
+demographic_data_coll=myclient["Demographic_database"]["Demographic data"]
 #----------------------------------------------------------------------------
-# For the moment we will suppose that the login process is working well and we're getting the user's UID successfully.
-# So instead of charging the UID from demographic DB, the below instructions allow user to manual enter the UID.
-st.subheader("UUID:")
-uuid=st.text_input("enter your UUID:",label_visibility ="collapsed")
-if len(uuid)==0:
-    st.warning(": You entered nothing !" ,icon="⚠️")
+# This function turns the "clinical_interface" state_session to True (Take a look on st.state_session if you are not familiar with it)
+def callback():
+    #Button was clicked!
+    st.session_state.clinical_interface= True
+#----------------------------------------------------------------------------
+if "clinical_interface" not in st.session_state:
+    st.session_state.clinical_interface=False
+
+if "uuid" not in st.session_state:
+    st.session_state.uuid=""
+#----------------------------------------------------------------------------
+if st.session_state.clinical_interface == False:
+    from demographics import demographic_data,correct_dni,add_demographic_data
+    st.subheader("Phone Number:")
+    phone_number=st.text_input("enter your phone number:",label_visibility ="collapsed")
+    if len(phone_number)==0:
+        st.warning(": You entered nothing !" ,icon="⚠️")
+    else:
+        demographic_doc=demographic_data_coll.find_one({'phone number': phone_number})
+        if(demographic_doc):
+            patient_name=demographic_doc["demographic data"]["identities"][0]["details"]["items"][0]["value"]["value"]
+            patient_surname=demographic_doc["demographic data"]["identities"][0]["details"]["items"][1]["value"]["value"]
+            gender="Mrs"
+            patient_gender=demographic_doc["demographic data"]["details"]["items"][0]["items"][4]["value"]["value"]
+            if patient_gender=="Male":
+                gender="Mr"
+            st.success(f"Hello {gender} {patient_name} {patient_surname}!")
+
+            st.session_state.uuid=demographic_doc["uuid"]
+            st.warning("CLick on the button below to move to clinical interface" ,icon="⚠️")
+            col1, col2, col3 = st.columns([4,2,3])
+            with col2:    
+                move_to_clinical = st.button("Move to Clinical Interface",on_click=callback)
+            if move_to_clinical:
+                pass
+        else:
+            st.info("This phone number doesn't exist in Database! You're a new patient! please fill this demographic form below")    
+            name,surname,dni,status,birthday,country_of_birth,province_birth,town_birth,street_name,street_number,postal_code,correct_postal_code,country,province,town=demographic_data()
+            if( len(name)>0 and len(surname)>0 and correct_dni(dni) and len(province_birth)>0 and len(country_of_birth)>0 and len(town_birth)>0 and len(street_name)>0 and street_number>0 and correct_postal_code and len(country)>0 and len(province)>0 and len(town)>0):
+                #'patient.v0_20230713112750_000001_1.json': This is a json file containing standard demographic data in the OpenEHR standards form
+                full_path_demographic_data = 'patient.v0_20230713112750_000001_1.json'
+                #Demographic data file:
+                with open(full_path_demographic_data, 'r') as openfile:
+                    # Reading from json file
+                    json_object_demographic_data = json.load(openfile)
+
+                #demographic data:
+                json_object_demographic_data=add_demographic_data(json_object_demographic_data,name,surname,dni,status,birthday,country_of_birth,province_birth,town_birth,street_name,street_number,postal_code,country,province,town)
+                
+                st.write("#")
+                col1, col2, col3 = st.columns([4,2,3])
+                with col2:    
+                    save_demographics = st.button("Done")
+                
+                if save_demographics:
+                    st.session_state.uuid=str(uuid.uuid4())
+                    demographic_doc={
+                    "uuid": st.session_state.uuid,
+                    "phone number": phone_number,
+                    "current date": "<"+str(datetime.date.today())+">",
+                    "demographic data": json_object_demographic_data
+                }
+                    demographic_data_coll.insert_one(demographic_doc)
+                    st.success("Patient's data added to database",icon="✅")
+                    st.warning("CLick on the button below to move to clinical interface" ,icon="⚠️")
+
+                    col1, col2, col3 = st.columns([4,2,3])
+                    with col2:    
+                        move_to_clinical = st.button("Move to Clinical Interface",on_click=callback)
+                    if move_to_clinical:
+                        pass
+            else:
+                st.write("#")
+                st.error(": One of the values you entered is invalid, Please check them carefully!",icon="⛔")
 else:
-    st.write("#")
+    #--------------------------------------------------------------------------------------------
     #--------------------------------------------------------------------------------------------
     # Here we'll check the existance of this UID in the clinical data db:
     # "Previous state" is an imporant variable that allows us to know the number of previous uses:
-    occurence=medical_data_coll.count_documents({"uuid":uuid})
+    occurence=medical_data_coll.count_documents({"uuid":st.session_state.uuid})
     if occurence==0:
         previous_state="First time"
     elif occurence==1:
@@ -40,7 +113,7 @@ else:
     current_drugs={}
     if previous_state!="First time":
         extracted_medication_list = medical_data_coll.find_one(
-        {'uuid': uuid},
+        {'uuid': st.session_state.uuid},
         sort=[( '_id', py.DESCENDING )]
         )["medication list"]
         for drug_json_file in extracted_medication_list:
@@ -52,12 +125,12 @@ else:
     hba1c_records=[current_HbA1c]
     if previous_state=="Second time":
         extracted_hba1c_records_list = medical_hist_coll.find_one(
-        {'uuid': uuid},)["analytics"][0][0]
+        {'uuid': st.session_state.uuid},)["analytics"][0][0]
         previous_hba1c=extracted_hba1c_records_list["content"][0]["data"]["events"][0]["data"]["items"][6]["items"][2]["value"]["magnitude"]
         hba1c_records=[current_HbA1c,previous_hba1c]
 
     if previous_state=="Two previous times or more":
-        cursor = medical_hist_coll.find({'uuid': uuid}).sort("_id", py.DESCENDING).limit(2)
+        cursor = medical_hist_coll.find({'uuid': st.session_state.uuid}).sort("_id", py.DESCENDING).limit(2)
         hba1c_list=[]
         # Iterate through the results
         for document in cursor:
@@ -96,7 +169,7 @@ else:
             current_date="<"+str(datetime.date.today())+">"
 
             medical_data_dict={
-                "uuid": uuid,
+                "uuid": st.session_state.uuid,
                 "check date": current_date,
                 "problem list": problem_list,
                 "risk factors": risk_factors,
@@ -106,7 +179,7 @@ else:
             }
 
             medical_history_dict={
-                "uuid": uuid,
+                "uuid": st.session_state.uuid,
                 "check date": current_date,
                 "analytics": [laboratory_test_results_list, json_object_bmi],
             }
