@@ -74,9 +74,9 @@ if st.session_state.clinical_interface == False:
                     demographic_doc={
                     "uuid": st.session_state.uuid,
                     "phone number": phone_number,
-                    "current date": "<"+str(datetime.date.today())+">",
+                    "current date": str(datetime.date.today()),
                     "demographic data": json_object_demographic_data
-                }
+                    }
                     demographic_data_coll.insert_one(demographic_doc)
                     st.success("Patient's data added to database",icon="✅")
                     st.warning("CLick on the button below to move to clinical interface" ,icon="⚠️")
@@ -166,7 +166,7 @@ else:
             medication_list = save_medication_list(proposed_med)
             json_object_encounter_symptoms = save_symptoms(symptoms)
 
-            current_date="<"+str(datetime.date.today())+">"
+            current_date=str(datetime.date.today())
 
             medical_data_dict={
                 "uuid": st.session_state.uuid,

@@ -135,7 +135,7 @@ def demographic_data():
 def add_demographic_data(json_object_demographic_data,name,surname,dni,status,birthday,country_of_birth,province_birth,town_birth,street_name,street_number,postal_code,country,province,town):
 
     #Birth data:
-    json_object_demographic_data["details"]["items"][0]["items"][0]["value"]["value"]="<"+str(birthday)+">"
+    json_object_demographic_data["details"]["items"][0]["items"][0]["value"]["value"]=str(birthday)
     json_object_demographic_data["details"]["items"][0]["items"][1]["value"]["value"]=country_of_birth
     json_object_demographic_data["details"]["items"][0]["items"][2]["value"]["value"]=province_birth
     json_object_demographic_data["details"]["items"][0]["items"][3]["value"]["value"]=town_birth
