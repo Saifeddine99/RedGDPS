@@ -97,3 +97,15 @@ def save_medication_list(proposed_med):
         medication_list[-1]["content"][0]["items"][0]["description"]["items"][0]["value"]["value"] = drug
         medication_list[-1]["content"][0]["items"][0]["description"]["items"][2]["items"][3]["value"]["value"] = dose
     return(medication_list)
+#---------------------------------------------------------------------------
+def save_age_to_compo(age):
+    #This is a json file containing standard clinical data in the OpenEHR standards form
+    full_path_age_compo = 'age.v0_20231018121908_000001_1.json'
+    #Demographic data file:
+    with open(full_path_age_compo, 'r') as openfile:
+        # Reading from json file
+        json_object_age_compo = json.load(openfile)
+
+    json_object_age_compo["content"][0]["data"]["events"][0]["data"]["items"][0]["value"]["value"]=age
+
+    return(json_object_age_compo)

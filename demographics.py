@@ -35,7 +35,7 @@ def demographic_data():
         
         #Getting patient's gender:
         st.subheader("Gender:")
-        status = st.radio("", ('Male', 'Female'))
+        status = st.radio("", ('MALE', 'FEMALE'))
         st.write("#")
 #----------------------------------------------------------------------------------------------------
     st.markdown("<h1 style='color: #0B5345;'>Birth data:</h1>", unsafe_allow_html = True)
@@ -169,3 +169,14 @@ def correct_dni(dni):
         return(True)
     else :
         return(False)
+    
+#This function calculates the age of a person based on his Birthdate
+def calculate_age(birthdate):
+    # Assuming birthdate is in the format 'YYYY-MM-DD'
+    birthdate_obj = datetime.datetime.strptime(birthdate, '%Y-%m-%d')
+    current_date = datetime.datetime.now()
+    
+    # Calculate age
+    age = current_date.year - birthdate_obj.year - ((current_date.month, current_date.day) < (birthdate_obj.month, birthdate_obj.day))
+    
+    return age

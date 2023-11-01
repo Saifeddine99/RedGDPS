@@ -39,7 +39,7 @@ if st.session_state.clinical_interface == False:
             patient_surname=demographic_doc["demographic data"]["identities"][0]["details"]["items"][1]["value"]["value"]
             gender="Mrs"
             patient_gender=demographic_doc["demographic data"]["details"]["items"][0]["items"][4]["value"]["value"]
-            if patient_gender=="Male":
+            if patient_gender=="MALE":
                 gender="Mr"
             st.success(f"Hello {gender} {patient_name} {patient_surname}!")
 
@@ -157,7 +157,10 @@ else:
             save_to_db_button = st.button('Save to database')
 
         if save_to_db_button:
-            from treat_recom.saving_todb_preprocessing import save_symptoms,save_laboratory_test_results,save_bmi,save_problem_list,save_risk_factors,save_medication_list
+            from demographics import calculate_age
+            birthdate=demographic_data_coll.find_one({"uuid": st.session_state.uuid})["demographic data"]["details"]["items"][0]["items"][0]["value"]["value"]
+            age="P"+str(calculate_age(birthdate))+"Y"
+            from treat_recom.saving_todb_preprocessing import save_symptoms,save_laboratory_test_results,save_bmi,save_problem_list,save_risk_factors,save_medication_list,save_age_to_compo
             
             laboratory_test_results_list = save_laboratory_test_results(current_HbA1c,current_eGFR,current_UACR)
             json_object_bmi = save_bmi(current_BMI,height,weight)
@@ -165,6 +168,7 @@ else:
             risk_factors = save_risk_factors(CVRFs)
             medication_list = save_medication_list(proposed_med)
             json_object_encounter_symptoms = save_symptoms(symptoms)
+            age_json_compo = save_age_to_compo(age)
 
             current_date=str(datetime.date.today())
 
@@ -176,6 +180,7 @@ else:
                 "medication list": medication_list,
                 "therapeutic precautions": therapeutic_precautions,
                 "symptoms": json_object_encounter_symptoms,
+                "age": age_json_compo
             }
 
             medical_history_dict={
