@@ -19,6 +19,10 @@ demographic_data_coll=myclient["Demographic_database"]["Demographic data"]
 def callback():
     #Button was clicked!
     st.session_state.clinical_interface= True
+
+def callback_false():
+    #Button was clicked!
+    st.session_state.clinical_interface= False
 #----------------------------------------------------------------------------
 if "clinical_interface" not in st.session_state:
     st.session_state.clinical_interface=False
@@ -26,6 +30,14 @@ if "clinical_interface" not in st.session_state:
 if "uuid" not in st.session_state:
     st.session_state.uuid=""
 #----------------------------------------------------------------------------
+m = st.markdown("""
+    <style>
+    div.stButton > button:first-child {
+        background-color: rgb(204, 225, 229);
+    }
+    </style>""", unsafe_allow_html=True)
+#----------------------------------------------------------------------------
+
 if st.session_state.clinical_interface == False:
     from demographics import demographic_data,correct_dni,add_demographic_data
     st.subheader("Phone Number:")
@@ -94,6 +106,8 @@ else:
     #--------------------------------------------------------------------------------------------
     # Here we'll check the existance of this UID in the clinical data db:
     # "Previous state" is an imporant variable that allows us to know the number of previous uses:
+
+    st.sidebar.button("Back to Demographic Interface",on_click=callback_false)
     occurence=medical_data_coll.count_documents({"uuid":st.session_state.uuid})
     if occurence==0:
         previous_state="First time"
