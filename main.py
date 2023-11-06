@@ -159,7 +159,7 @@ else:
         if save_to_db_button:
             from demographics import calculate_age
             birthdate=demographic_data_coll.find_one({"uuid": st.session_state.uuid})["demographic data"]["details"]["items"][0]["items"][0]["value"]["value"]
-            age="P"+str(calculate_age(birthdate))+"Y"
+            age=round(calculate_age(birthdate))
             from treat_recom.saving_todb_preprocessing import save_symptoms,save_laboratory_test_results,save_bmi,save_problem_list,save_risk_factors,save_medication_list,save_age_to_compo
             
             laboratory_test_results_list = save_laboratory_test_results(current_HbA1c,current_eGFR,current_UACR)

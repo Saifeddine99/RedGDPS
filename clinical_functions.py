@@ -102,7 +102,7 @@ def get_CVRFs(current_BMI, current_eGFR,current_UACR):
     st.subheader("Cardiovascular risk factors:")
     CVRFs = st.multiselect(
                     'Select your cardiovascular risk factors:',
-                    ['hypertension','hypercholesterolemia','smoking','albuminuria','family history of early CVD'])
+                    ['High_blood_pressure','hypercholesterolemia','smoking','albuminuria','family history of early CVD'])
     
     if (isinstance(current_BMI, float)):
         if (current_BMI>=30):
