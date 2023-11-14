@@ -3,9 +3,10 @@ import pymongo as py
 import datetime
 import json
 import uuid
+from PIL import Image
+img=Image.open('logo-GlobalEHR.png')
 
-
-st.set_page_config(page_title="RedGDPS", page_icon=":hospital:", layout="centered")
+st.set_page_config(page_title="GlobalEHR", page_icon=img, layout="centered")
 
 myclient=py.MongoClient("mongodb://localhost:27017")
 #Relating data to "clinical_data"
