@@ -1,5 +1,6 @@
 import streamlit as st
 import datetime
+import json
 
 def demographic_data():
     st.write("#")
@@ -35,7 +36,7 @@ def demographic_data():
         
         #Getting patient's gender:
         st.subheader("Gender:")
-        status = st.radio("", ('MALE', 'FEMALE'))
+        gender = st.radio("", ('MALE', 'FEMALE'))
         st.write("#")
 #----------------------------------------------------------------------------------------------------
     st.markdown("<h1 style='color: #0B5345;'>Birth data:</h1>", unsafe_allow_html = True)
@@ -129,33 +130,39 @@ def demographic_data():
         if (len(town)==0):
             st.warning(": You entered nothing !" ,icon="⚠️")
         st.write("#")
-    return(name,surname,dni,status,birthday,country_of_birth,province_birth,town_birth,street_name,street_number,postal_code,correct_postal_code,country,province,town)
+    return(name,surname,dni,gender,birthday,country_of_birth,province_birth,town_birth,street_name,street_number,postal_code,correct_postal_code,country,province,town)
     
 #This function adds the submitted demographic_data to the demographics json file 
-def add_demographic_data(json_object_demographic_data,name,surname,dni,status,birthday,country_of_birth,province_birth,town_birth,street_name,street_number,postal_code,country,province,town):
-
+def add_demographic_data(name,surname,dni,gender,birthday,country_of_birth,province_birth,town_birth,street_name,street_number,postal_code,country,province,town):
+    from encrypt import encrypt_data
+    #'patient.v0_20230713112750_000001_1.json': This is a json file containing standard demographic data in the OpenEHR standards form
+    full_path_demographic_data = 'patient.v0_20230713112750_000001_1.json'
+    #Demographic data file:
+    with open(full_path_demographic_data, 'r') as openfile:
+        # Reading from json file
+        json_object_demographic_data = json.load(openfile)
     #Birth data:
-    json_object_demographic_data["details"]["items"][0]["items"][0]["value"]["value"]=str(birthday)
-    json_object_demographic_data["details"]["items"][0]["items"][1]["value"]["value"]=country_of_birth
-    json_object_demographic_data["details"]["items"][0]["items"][2]["value"]["value"]=province_birth
-    json_object_demographic_data["details"]["items"][0]["items"][3]["value"]["value"]=town_birth
-    json_object_demographic_data["details"]["items"][0]["items"][4]["value"]["value"]=status
-    json_object_demographic_data["details"]["items"][0]["items"][5]["value"]["value"]=dni
+    json_object_demographic_data["details"]["items"][0]["items"][0]["value"]["value"]=encrypt_data(str(birthday))
+    json_object_demographic_data["details"]["items"][0]["items"][1]["value"]["value"]=encrypt_data(country_of_birth.upper())
+    json_object_demographic_data["details"]["items"][0]["items"][2]["value"]["value"]=encrypt_data(province_birth.upper())
+    json_object_demographic_data["details"]["items"][0]["items"][3]["value"]["value"]=encrypt_data(town_birth.upper())
+    json_object_demographic_data["details"]["items"][0]["items"][4]["value"]["value"]=encrypt_data(gender.upper())
+    json_object_demographic_data["details"]["items"][0]["items"][5]["value"]["value"]=encrypt_data(dni.upper())
 
     #Other data:
-    json_object_demographic_data["details"]["items"][3]["value"]["value"]=status
+    json_object_demographic_data["details"]["items"][3]["value"]["value"]=encrypt_data(gender.upper())
 
     #Address:
-    json_object_demographic_data["contacts"][0]["addresses"][0]["details"]["items"][0]["items"][0]["value"]["value"]=street_name
-    json_object_demographic_data["contacts"][0]["addresses"][0]["details"]["items"][0]["items"][1]["value"]["value"]=street_number
-    json_object_demographic_data["contacts"][0]["addresses"][0]["details"]["items"][1]["value"]["value"]=postal_code
-    json_object_demographic_data["contacts"][0]["addresses"][0]["details"]["items"][2]["value"]["value"]=town
-    json_object_demographic_data["contacts"][0]["addresses"][0]["details"]["items"][3]["value"]["value"]=province
-    json_object_demographic_data["contacts"][0]["addresses"][0]["details"]["items"][4]["value"]["value"]=country
+    json_object_demographic_data["contacts"][0]["addresses"][0]["details"]["items"][0]["items"][0]["value"]["value"]=encrypt_data(street_name.upper())
+    json_object_demographic_data["contacts"][0]["addresses"][0]["details"]["items"][0]["items"][1]["value"]["value"]=encrypt_data(str(street_number).upper())
+    json_object_demographic_data["contacts"][0]["addresses"][0]["details"]["items"][1]["value"]["value"]=encrypt_data(postal_code.upper())
+    json_object_demographic_data["contacts"][0]["addresses"][0]["details"]["items"][2]["value"]["value"]=encrypt_data(town.upper())
+    json_object_demographic_data["contacts"][0]["addresses"][0]["details"]["items"][3]["value"]["value"]=encrypt_data(province.upper())
+    json_object_demographic_data["contacts"][0]["addresses"][0]["details"]["items"][4]["value"]["value"]=encrypt_data(country.upper())
 
     #Identity:
-    json_object_demographic_data["identities"][0]["details"]["items"][0]["value"]["value"]=name
-    json_object_demographic_data["identities"][0]["details"]["items"][1]["value"]["value"]=surname
+    json_object_demographic_data["identities"][0]["details"]["items"][0]["value"]["value"]=encrypt_data(name.upper())
+    json_object_demographic_data["identities"][0]["details"]["items"][1]["value"]["value"]=encrypt_data(surname.upper())
 
     return(json_object_demographic_data)
 
