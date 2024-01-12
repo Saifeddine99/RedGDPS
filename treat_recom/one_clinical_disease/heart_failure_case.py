@@ -1,13 +1,13 @@
 def heart_failure_(hba1c_records,previous_state,med_dose_last_time):
-    full_dose= "full dose"
-    second_or_third_med_level=['DPP4i', 'oral GLP1ra', 'Pio', 'SU']
+    full_dose= ("full dose").upper()
+    second_or_third_med_level=[('DPP4i').upper(), ('oral GLP1ra').upper(), ('Pio').upper(), ('SU').upper()]
 
     next_date="Your next check is after 3 months"
     proposed_med={}
     #If the patient will get treatment for the first time
     if(previous_state=="First time"):
-        proposed_med["Metformin"]=full_dose
-        proposed_med["SGLT2i"]=full_dose
+        proposed_med[("Metformin").upper()]=full_dose
+        proposed_med[("SGLT2i").upper()]=full_dose
 
     else:
         #The target variable represents the threshold to decide whether the patient achieved objective or not
@@ -16,28 +16,28 @@ def heart_failure_(hba1c_records,previous_state,med_dose_last_time):
         current_hba1c=hba1c_records[0]
         if(current_hba1c>=target_):
             #Here we'll be working on the case of someone using only metformin+ SGLT2i
-            if("Metformin" in med_dose_last_time and "SGLT2i" in med_dose_last_time and len(med_dose_last_time)==2):
-                proposed_med["Metformin"]=full_dose
-                proposed_med["SGLT2i"]=full_dose
+            if(("Metformin").upper() in med_dose_last_time and ("SGLT2i").upper() in med_dose_last_time and len(med_dose_last_time)==2):
+                proposed_med[("Metformin").upper()]=full_dose
+                proposed_med[("SGLT2i").upper()]=full_dose
                 proposed_med["You can choose any item from this list: {}".format(second_or_third_med_level)]=full_dose
             # Here we move to the step of recommending basal insulin
-            elif("Metformin" in med_dose_last_time and not("Basal insulin" in med_dose_last_time) and "SGLT2i" in med_dose_last_time and len(med_dose_last_time)>=3 ):
+            elif(("Metformin").upper() in med_dose_last_time and not(("Basal insulin").upper() in med_dose_last_time) and ("SGLT2i").upper() in med_dose_last_time and len(med_dose_last_time)>=3 ):
                 drugs=list(med_dose_last_time.keys())
-                drugs.remove("Metformin")
-                drugs.remove("SGLT2i")
+                drugs.remove(("Metformin").upper())
+                drugs.remove(("SGLT2i").upper())
                 logic_drugs=1
                 for item in drugs:
                     if(item not in second_or_third_med_level):
                         logic_drugs=0
                 if(logic_drugs==1):
                     proposed_med={}
-                    proposed_med["Basal insulin"]=full_dose
+                    proposed_med[("Basal insulin").upper()]=full_dose
                 else:
                     proposed_med={}
                     proposed_med["Can't recommend treatment for this case !"]=""
-            elif("Basal insulin" in med_dose_last_time):
+            elif(("Basal insulin").upper() in med_dose_last_time):
                 proposed_med={}
-                proposed_med["Basal insulin"]= full_dose
+                proposed_med[("Basal insulin").upper()]= full_dose
             else:
                 #Here we deal with treatments out of algorithm logic
                 proposed_med={}
